@@ -2,92 +2,96 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ważne informacje</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super ważna sprawa</title>
   <style>
-    body {
-      margin:0; background:#111; color:#0f0; font-family:Arial;
-      height:100vh; display:flex; flex-direction:column;
-      justify-content:center; align-items:center;
-      text-align:center;
+    body, html { margin:0; padding:0; height:100%; background:#000; overflow:hidden; }
+    
+    /* Ekran startowy */
+    #startScreen {
+      height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;
+      background:#111; color:#0f0; text-align:center; font-family:Arial, sans-serif;
     }
-    h1 { font-size:3em; margin:20px; }
-    button {
-      padding:20px 40px; font-size:2em; cursor:pointer;
-      background:#f00; color:white; border:none; border-radius:12px;
-      box-shadow:0 0 20px red;
+    #startScreen h1 { font-size:2.5em; margin-bottom:30px; }
+    #startBtn {
+      padding:20px 50px; font-size:2em; background:#c00; color:white; border:none;
+      border-radius:15px; cursor:pointer; box-shadow:0 0 30px #f00;
     }
-    button:hover { background:#ff4444; transform:scale(1.1); }
-    #prank { display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-             background:black; color:lime; justify-content:center; align-items:center;
-             flex-direction:column; font-family:Impact; text-align:center; z-index:9999; }
-    #prank h1 { font-size:15vw; animation:blink 0.5s infinite; }
-    #prank img { max-width:90%; animation:zoom 1.2s infinite alternate; }
-    @keyframes blink { 50% {opacity:0;} }
-    @keyframes zoom { from{transform:scale(1)} to{transform:scale(1.15)} }
+    #startBtn:hover { background:#f00; transform:scale(1.05); }
+
+    /* Ekran pranka – ukryty na początku */
+    #prank {
+      display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:black; color:#0f0; flex-direction:column; justify-content:center;
+      align-items:center; text-align:center; font-family:"Comic Sans MS", Impact, sans-serif;
+    }
+    #prank h1 {
+      font-size:8vw; margin:10px; text-transform:uppercase;
+      animation:blink 0.7s infinite; text-shadow:0 0 20px lime;
+    }
+    #prank img {
+      width:45vw; max-width:500px; margin:20px auto;
+      animation:zoom 1.5s infinite alternate;
+    }
+    #prank h2 {
+      font-size:5vw; margin:10px; color:#ff0;
+    }
+    @keyframes blink { 50% { opacity:0.3; } }
+    @keyframes zoom { from { transform:scale(0.95); } to { transform:scale(1.1); } }
   </style>
 </head>
 <body>
 
-  <h1>Hej! Kliknij poniższy przycisk, żeby zobaczyć coś ważnego...</h1>
-  <button id="start">OTWÓRZ TERAZ</button>
-
-  <div id="prank">
-    <h1>ZOSTAŁEŚ RICKROLLOWANY!</h1>
-    <img src="https://i.imgur.com/7wY5h9g.png" alt="trollface">
-    <h1>TERAZ SŁUCHAJ TEGO NA ZAWSZE!</h1>
+  <!-- Ekran startowy -->
+  <div id="startScreen">
+    <h1>Stary, szybko kliknij przycisk poniżej!</h1>
+    <button id="startBtn">WEJDŹ TERAZ →</button>
   </div>
 
-  <audio id="sound" loop>
+  <!-- Ekran pranka -->
+  <div id="prank">
+    <h1>Zostałeś zhackowany!</h1>
+    <img src="https://i.imgur.com/7wY5h9g.png" alt="Trollface">
+    <h2>Teraz słuchaj tego do końca życia</h2>
+  </div>
+
+  <audio id="troll" loop>
     <source src="sound.mp3" type="audio/mpeg">
   </audio>
 
 <script>
-  const startBtn = document.getElementById('start');
-  const prank = document.getElementById('prank');
-  const audio = document.getElementById('sound');
+  document.getElementById('startBtn').onclick = function() {
+    // Ukrywamy start
+    document.getElementById('startScreen').style.display = 'none';
+    
+    // Pokazujemy prank
+    document.getElementById('prank').style.display = 'flex';
 
-  startBtn.onclick = function() {
-    // 1. Ukrywamy przycisk i wszystko inne
-    document.querySelector('h1').style.display = 'none';
-    startBtn.style.display = 'none';
+    // Fullscreen – teraz 100% działa, bo kliknięcie!
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
 
-    // 2. Pokazujemy prank
-    prank.style.display = 'flex';
-
-    // 3. Fullscreen – teraz działa, bo jest po kliknięciu!
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
-    } else if (document.documentElement.mozRequestFullScreen) {
-      document.documentElement.mozRequestFullScreen();
-    } else if (document.documentElement.webkitRequestFullscreen) {
-      document.documentElement.webkitRequestFullscreen();
-    } else if (document.documentElement.msRequestFullscreen) {
-      document.documentElement.msRequestFullscreen();
-    }
-
-    // 4. Głośny dźwięk
+    // Dźwięk na maxa
+    const audio = document.getElementById('troll');
     audio.volume = 1.0;
     audio.play();
 
-    // 5. Blokujemy wyjścia (Esc, F11, Ctrl+W, Alt+F4 itd.)
-    document.onkeydown = function(e) {
-      if ([27, 122, 116, 87, 119].includes(e.keyCode) || // Esc, F11, F5, W, Ctrl+R
-          (e.ctrlKey || e.metaKey) || 
-          (e.altKey && e.key === 'F4')) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
+    // Blokady (Esc, F11, Ctrl+W, Alt+F4, prawy przycisk)
+    document.onkeydown = e => {
+      if (e.keyCode === 27 || e.keyCode === 122 || e.keyCode === 116 || 
+          (e.ctrlKey && e.keyCode === 87) || (e.ctrlKey && e.shiftKey && e.keyCode === 81) ||
+          (e.altKey && e.keyCode === 115)) {
+        e.preventDefault(); return false;
       }
     };
-
-    // Blokada prawego przycisku
     document.oncontextmenu = e => e.preventDefault();
 
-    // Próbujemy wrócić do fullscreen, jeśli ktoś wyjdzie
+    // Jak ktoś wyjdzie z fullscreena – wraca
     document.addEventListener('fullscreenchange', () => {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen?.();
+        el.requestFullscreen?.();
       }
     });
   };
