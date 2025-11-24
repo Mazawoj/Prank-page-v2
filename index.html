@@ -2,85 +2,95 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Ładowanie...</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ważne informacje</title>
   <style>
-    * { margin:0; padding:0; }
-    html, body {
-      height: 100%; width: 100%;
-      overflow: hidden;
-      background: #000;
-      color: #0f0;
-      font-family: Impact, Arial Black, sans-serif;
+    body {
+      margin:0; background:#111; color:#0f0; font-family:Arial;
+      height:100vh; display:flex; flex-direction:column;
+      justify-content:center; align-items:center;
+      text-align:center;
     }
-    #all {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
+    h1 { font-size:3em; margin:20px; }
+    button {
+      padding:20px 40px; font-size:2em; cursor:pointer;
+      background:#f00; color:white; border:none; border-radius:12px;
+      box-shadow:0 0 20px red;
     }
-    h1 { font-size: 15vw; text-transform: uppercase; animation: blink 0.6s infinite; }
-    img { max-width: 80%; margin: 30px; animation: zoom 1.5s infinite alternate; }
-    @keyframes blink { 50% { opacity: 0; } }
-    @keyframes zoom { from { transform: scale(0.9); } to { transform: scale(1.1); } }
+    button:hover { background:#ff4444; transform:scale(1.1); }
+    #prank { display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+             background:black; color:lime; justify-content:center; align-items:center;
+             flex-direction:column; font-family:Impact; text-align:center; z-index:9999; }
+    #prank h1 { font-size:15vw; animation:blink 0.5s infinite; }
+    #prank img { max-width:90%; animation:zoom 1.2s infinite alternate; }
+    @keyframes blink { 50% {opacity:0;} }
+    @keyframes zoom { from{transform:scale(1)} to{transform:scale(1.15)} }
   </style>
 </head>
 <body>
 
-<div id="all">
-  <h1>ZOSTAŁEŚ ZHACKOWANY!</h1>
-  <img src="https://i.imgur.com/7wY5h9g.png" alt="troll">
-  <h1>TERAZ SŁUCHAJ TEGO NA ZAWSZE</h1>
-</div>
+  <h1>Hej! Kliknij poniższy przycisk, żeby zobaczyć coś ważnego...</h1>
+  <button id="start">OTWÓRZ TERAZ</button>
 
-<audio id="rick" loop autoplay>
-  <source src="sound.mp3" type="audio/mpeg">
-</audio>
+  <div id="prank">
+    <h1>ZOSTAŁEŚ RICKROLLOWANY!</h1>
+    <img src="https://i.imgur.com/7wY5h9g.png" alt="trollface">
+    <h1>TERAZ SŁUCHAJ TEGO NA ZAWSZE!</h1>
+  </div>
+
+  <audio id="sound" loop>
+    <source src="sound.mp3" type="audio/mpeg">
+  </audio>
 
 <script>
-  const audio = document.getElementById('rick');
-  audio.volume = 1;
+  const startBtn = document.getElementById('start');
+  const prank = document.getElementById('prank');
+  const audio = document.getElementById('sound');
 
-  // Automatyczne odtwarzanie – w 2025 działa, jeśli audio ma atrybut autoplay i jest w <audio>
-  // (Chrome pozwala na autoplay jeśli nie ma user-gesture requirement dla muted lub jeśli dźwięk jest krótki – ale my i tak go odpalamy na siłę)
-  const playPromise = audio.play();
-  if (playPromise !== undefined) {
-    playPromise.catch(() => {
-      // Jeśli przeglądarka zablokuje – odpalamy po pierwszym kliknięciu/naciśnięciu klawisza
-      const unlock = () => {
-        audio.play();
-        document.removeEventListener('keydown', unlock);
-        document.removeEventListener('click', unlock);
-        document.removeEventListener('touchstart', unlock);
-      };
-      document.addEventListener('keydown', unlock);
-      document.addEventListener('click', unlock);
-      document.addEventListener('touchstart', unlock);
-    });
-  }
+  startBtn.onclick = function() {
+    // 1. Ukrywamy przycisk i wszystko inne
+    document.querySelector('h1').style.display = 'none';
+    startBtn.style.display = 'none';
 
-  // Blokada ucieczki
-  document.onkeydown = e => {
-    const blocked = [27, 122, 116, 87, 119]; // Esc, F11, F5, Ctrl+W, Ctrl+Shift+Q
-    if (blocked.includes(e.keyCode) || 
-       (e.ctrlKey && (e.key === 'w' || e.key === 'W' || e.key === 'r' || e.key === 'R')) ||
-       (e.ctrlKey && e.shiftKey && e.key === 'Q') ||
-       (e.altKey && e.key === 'F4')) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
+    // 2. Pokazujemy prank
+    prank.style.display = 'flex';
+
+    // 3. Fullscreen – teraz działa, bo jest po kliknięciu!
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) {
+      document.documentElement.mozRequestFullScreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen();
+    } else if (document.documentElement.msRequestFullscreen) {
+      document.documentElement.msRequestFullscreen();
     }
+
+    // 4. Głośny dźwięk
+    audio.volume = 1.0;
+    audio.play();
+
+    // 5. Blokujemy wyjścia (Esc, F11, Ctrl+W, Alt+F4 itd.)
+    document.onkeydown = function(e) {
+      if ([27, 122, 116, 87, 119].includes(e.keyCode) || // Esc, F11, F5, W, Ctrl+R
+          (e.ctrlKey || e.metaKey) || 
+          (e.altKey && e.key === 'F4')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    // Blokada prawego przycisku
+    document.oncontextmenu = e => e.preventDefault();
+
+    // Próbujemy wrócić do fullscreen, jeśli ktoś wyjdzie
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.();
+      }
+    });
   };
-
-  // Blokada prawego przycisku i kontekstu
-  document.oncontextmenu = e => e.preventDefault();
-  document.body.style.pointerEvents = 'none'; // dodatkowo utrudnia klikanie czegokolwiek
-
-  // Fake „fullscreen” – pasek adresu znika po 2-3 sekundach w mobile i po przewinięciu w desktop
-  window.scrollTo(0, 1);
 </script>
 </body>
 </html>
